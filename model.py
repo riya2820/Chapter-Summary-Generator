@@ -18,3 +18,38 @@ for line in data:
 
 max_sequence_length = max([len(x) for x in input_sequences])
 input_sequences = pad_sequences(input_sequences, maxlen=max_sequence_length, padding='pre')
+
+
+# LSTM model
+model = Sequential()
+model.add(Embedding(total_words, 100,input_length=max_sequence_length-1))
+model.add(LSTM(150, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(100))
+model.add(Dense(total_words, activation='softmax'))
+
+
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+X, y = input_sequences[:, :-1], input_sequences[:, -1]
+y = tf.keras.utils.to_categorical(y, num_classes=total_words)
+
+model.fit(X, y, epochs=200, verbose=1)
+
+
+
+
+seed_text = "input text"
+next_words = 15
+
+for _ in range(next_words):
+    token_list = tokenizer.texts_to_sequences([seed_text])[0]
+    token_list = pad_sequences([token_list], maxlen=max_sequence_length-1, padding='pre')
+    predicted_probabilities = model.predict(token_list, verbose=0)[0]
+    predicted_index = np.argmax(predicted_probabilities)
+    output_word = tokenizer.index_word[predicted_index]
+    seed_text += " " + output_word
+
+print(seed_text)
+
+
